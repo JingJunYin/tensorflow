@@ -57,7 +57,7 @@ function main() {
   done
 
   echo $(date) : "=== Using tmpdir: ${TMPDIR}"
-
+  #!sleep 5 
   if [ ! -d bazel-bin/tensorflow ]; then
     echo "Could not find bazel-bin.  Did you run from the root of the build tree?"
     exit 1
@@ -84,6 +84,7 @@ function main() {
     cp -R \
       bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/tensorflow \
       "${TMPDIR}"
+      echo "jing: should not hit this"
     mkdir "${TMPDIR}/external"
     cp_external \
       bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/external \
@@ -99,13 +100,16 @@ function main() {
   else
     if [ -d bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/external ]; then
       # Old-style runfiles structure (--legacy_external_runfiles).
+      echo "hit #1"
       cp -R \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/tensorflow \
         "${TMPDIR}"
       mkdir "${TMPDIR}/external"
+      read -p "Press enter to continue"
       cp_external \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/external \
         "${TMPDIR}/external"
+      read -p "Press enter to continue"
       # Copy MKL libs over so they can be loaded at runtime
       if [ -d bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/_solib_k8/_U_S_Sthird_Uparty_Smkl_Cintel_Ubinary_Ublob___Uthird_Uparty_Smkl ]; then
         mkdir "${TMPDIR}/_solib_k8"
@@ -115,6 +119,7 @@ function main() {
       fi
     else
       # New-style runfiles structure (--nolegacy_external_runfiles).
+      echo "should not hit this"
       cp -R \
         bazel-bin/tensorflow/tools/pip_package/build_pip_package.runfiles/org_tensorflow/tensorflow \
         "${TMPDIR}"
@@ -137,18 +142,27 @@ function main() {
   # protobuf pip package doesn't ship with header files. Copy the headers
   # over so user defined ops can be compiled.
   mkdir -p ${TMPDIR}/google
+  read -p "Press enter to continue"
   mkdir -p ${TMPDIR}/third_party
+  read -p "Press enter to continue"
   pushd ${RUNFILES%org_tensorflow}
+  read -p "Press enter to continue"
+
   for header in $(find protobuf -name \*.h); do
     mkdir -p "${TMPDIR}/google/$(dirname ${header})"
     cp "$header" "${TMPDIR}/google/$(dirname ${header})/"
   done
+  read -p "Press enter to continue"
   popd
   cp -R $RUNFILES/third_party/eigen3 ${TMPDIR}/third_party
+  read -p "Press enter to continue"
 
   cp tensorflow/tools/pip_package/MANIFEST.in ${TMPDIR}
+  read -p "Press enter to continue"
   cp tensorflow/tools/pip_package/README ${TMPDIR}
+  read -p "Press enter to continue"
   cp tensorflow/tools/pip_package/setup.py ${TMPDIR}
+  read -p "Press enter to continue"
 
   # Before we leave the top-level directory, make sure we know how to
   # call python.
@@ -157,11 +171,16 @@ function main() {
   pushd ${TMPDIR}
   rm -f MANIFEST
   echo $(date) : "=== Building wheel"
+  echo "my GPU flag: ${GPU_FLAG}"
   "${PYTHON_BIN_PATH:-python}" setup.py bdist_wheel ${GPU_FLAG} >/dev/null
   mkdir -p ${DEST}
+  #!mkdir ${DEST}
+  read -p "making DEST Press enter to continue"
   cp dist/* ${DEST}
+  read -p "copying to DEST Press enter to continue"
   popd
   rm -rf ${TMPDIR}
+  echo "my temp location is: ${TMPDIR}"
   echo $(date) : "=== Output wheel file is in: ${DEST}"
 }
 
